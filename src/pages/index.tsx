@@ -1,76 +1,76 @@
 import type { NextPage } from "next";
 import Link from "next/link";
 import useSWR from "swr";
+import { Button } from "~/components/Button";
 import { useUser } from "~/hooks/useUser";
 import { MembershipMetadata } from "~/types";
+import { BsFillChatFill as ChatIcon } from "react-icons/bs";
+import { useRouter } from "next/router";
+import { Navigation } from "~/components/Navigation";
+import { MessageBox } from "~/components/MessageBox";
+import { useSupabase } from "use-supabase";
+import { useStore } from "~/hooks/useStore";
+import { useEffect, useRef } from "react";
+import { BlockAvatar } from "~/components/BlockAvatar";
 
 const Home: NextPage = () => {
-  const { logoutUser, user } = useUser();
-  const { data } =
-    useSWR<{ memberships: MembershipMetadata[] }>("/api/memberships");
+  const { messages } = useStore({});
+  const containerRef = useRef<any>(null);
+  useEffect(() => {
+    containerRef.current.scrollTop = containerRef.current.scrollHeight;
+  }, [messages.length]);
 
-  const buttonClass =
-    "bg-[#603DEB] text-white px-8 text-lg py-2 font-bold rounded hover:opacity-80";
-
-  if (!user?.isLoggedIn) {
-    return (
-      <div className="max-w-screen-md px-6 pt-24 mx-auto">
-        <header className="pb-4 space-y-4 text-center border-b-2">
-          <h1 className="text-5xl font-bold">Login using NFT membership</h1>
-          <p className="text-xl text-gray-700">
-            You do not have valid NFT membership to access this page. Verify or
-            buy membership by using the login button below.
+  useEffect(() => {
+    containerRef.current.scrollTop = containerRef.current.scrollHeight;
+  }, []);
+  return (
+    <div>
+      <Navigation />
+      <div className="max-w-screen-sm px-4 pt-8 mx-auto">
+        <header className="space-y-1 text-center">
+          <h1 className="text-xl font-bold sm:text-3xl">NFT Membership Chat</h1>
+          <p className="text-base sm:text-lg">
+            A chat box where people who own chat membership NFTs can write
+            messages and interact with each other. Non-members can read the
+            chat.
           </p>
         </header>
-        <div className="pt-8">
-          <div className="flex justify-center">
-            <button className={buttonClass}>
-              <Link href="/api/login">Login using NFT membership</Link>{" "}
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className="max-w-screen-md px-6 pt-24 mx-auto">
-      <header className="pb-4 space-y-4 text-center border-b-2">
-        <h1 className="text-5xl font-bold"> Your Unlock Memberships (NFTs)</h1>
-        <p className="text-xl text-gray-700">
-          These are all the available memberships valid to access this
-          application.
-        </p>
-        <div className="flex justify-end gap-8">
-          <button className={buttonClass} onClick={() => logoutUser()}>
-            Logout
-          </button>
-        </div>
-      </header>
-      <div className="grid pt-8 sm:grid-cols-2">
-        {data?.memberships.map((membership) => {
-          const expiration = new Date(membership.expiration * 1000);
-          return (
-            <div className="p-6 bg-white rounded shadow" key={membership.id}>
-              <div>
-                <img
-                  alt={membership.name}
-                  className="w-24 rounded"
-                  src={membership.image}
-                />
+        <div className="py-8">
+          <div className="h-[600px] border rounded-lg">
+            <div className="flex w-full gap-2 p-2 rounded-t-lg bg-slate-200">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-red-500 rounded-full"></div>
+                <div className="p-2 bg-orange-300 rounded-full"></div>
+                <div className="p-2 bg-green-400 rounded-full"></div>
               </div>
-              <div className="pt-4 space-y-4">
-                <h3 className="text-xl font-semibold"> {membership.name}</h3>
-                <p className="text-gray-700"> {membership.description}</p>
-                <p className="text-gray-500">
-                  Valid until{" "}
-                  <time dateTime={expiration.toLocaleDateString()}>
-                    {expiration.toLocaleDateString()}
-                  </time>
-                </p>
+              <p className="px-4 font-bold rounded bg-slate-300">#main</p>
+            </div>
+            <div className="flex flex-col justify-between flex-auto h-full">
+              <div
+                ref={containerRef}
+                className="grid gap-2 p-2 overflow-y-auto"
+              >
+                {messages
+                  .slice(messages.length - 25, messages.length)
+                  .map(({ wallet_address, content, id }) => (
+                    <div
+                      key={id}
+                      className="flex items-center gap-2 p-2 break-words bg-gray-100 rounded"
+                    >
+                      <BlockAvatar
+                        className="rounded-full"
+                        seed={wallet_address}
+                      />
+                      <p>{content}</p>
+                    </div>
+                  ))}
+              </div>
+              <div>
+                <MessageBox />
               </div>
             </div>
-          );
-        })}
+          </div>
+        </div>
       </div>
     </div>
   );
